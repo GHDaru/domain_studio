@@ -1,0 +1,19 @@
+# Books / PDFs
+*.pdf
+*.epub
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build / deps
+node_modules/
+target/
+dist/
+__pycache__/
+*.pyc
