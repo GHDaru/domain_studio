@@ -148,7 +148,7 @@ Rode no seu próprio modelo:
 - [ ] Cada subdomínio Genérico tem uma solução pronta candidata (biblioteca, serviço, produto).
 - [ ] Existe uma declaração de visão do domínio de um parágrafo.
 - [ ] Todo passo do fluxo validado cai em algum subdomínio.
-- [ ] Nenhum subdomínio foi nomeado por tecnologia ("Banco", "Front", "API").
+- [ ] Nenhum subdomínio foi nomeado por tecnologia ("Banco", "Front", "Application Programming Interface (API)").
 
 Perguntas de autoavaliação:
 

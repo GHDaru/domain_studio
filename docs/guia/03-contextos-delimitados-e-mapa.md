@@ -120,7 +120,7 @@ Como ler cada linha:
 | `A [U,OHS,PL]->[D,CF] B` | A é upstream com Open Host Service e Published Language; B é downstream Conformist. |
 | `A [SK]<->[SK] B` | Relação simétrica: Shared Kernel (seta dupla, sem upstream). |
 | `A [U]->[D,ACL] B` | B é downstream e se protege de A com uma ACL. |
-| `BoundedContext X implements XSD` | O contexto X realiza o subdomínio `XSD`, declarado em `Domain { Subdomain … }` com `type = CORE_DOMAIN` ou `SUPPORTING_DOMAIN`. |
+| `BoundedContext Nome implements NomeSD` | O contexto `Nome` realiza o subdomínio `NomeSD` (o sufixo SD, de subdomínio, é convenção deste projeto), declarado em `Domain { Subdomain … }` com `type = CORE_DOMAIN` ou `SUPPORTING_DOMAIN`. |
 
 Para **escrever** uma relação nova: declare o contexto em `contains`, crie o bloco
 `BoundedContext` com `domainVisionStatement`, e acrescente uma linha de relação com os papéis de

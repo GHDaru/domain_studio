@@ -10,10 +10,9 @@ termos: [projeto, especificacao, versao-especificacao, modelo-tatico, artefato-d
 
 # Aula 06 — Do modelo ao código
 
-> O código é o modelo escrito numa linguagem executável. Em Domain-Driven Design (DDD) com
-> arquitetura hexagonal, cada contexto delimitado vira um módulo em que **o domínio não importa
-> nada de fora**: nem FastAPI, nem Pydantic, nem banco. Tudo o que é tecnologia fica na borda e
-> depende do domínio — nunca o contrário.
+> Em Domain-Driven Design (DDD) com arquitetura hexagonal, cada contexto delimitado vira um módulo
+> em que **o domínio não importa nada de fora** — nem FastAPI, nem Pydantic, nem banco. A tecnologia
+> fica na borda e depende do domínio, nunca o contrário.
 
 ## 1. Objetivos
 
@@ -27,7 +26,7 @@ Ao fim desta aula você será capaz de:
 ## 2. O problema
 
 Um modelo bem desenhado se perde no código quando:
-- a entidade de domínio **é** o modelo do Object-Relational Mapper (ORM) ou o schema Pydantic, e toda mudança de tabela ou de Application Programming Interface (API) mexe na regra de negócio;
+- a entidade de domínio **é** o modelo do Object-Relational Mapper (ORM) ou o schema Pydantic, e mudar tabela ou Application Programming Interface (API) mexe na regra;
 - o router chama o banco diretamente e as invariantes ficam espalhadas por endpoints;
 - um contexto importa as classes de domínio de outro, e as fronteiras do mapa de contexto viram ficção.
 
@@ -35,17 +34,15 @@ Um modelo bem desenhado se perde no código quando:
 
 > **As dependências apontam para dentro: `api → application → domain ← infrastructure`.**
 
-O domínio define **portas** (interfaces, como `EspecificacaoRepository`); a infraestrutura fornece
-**adaptadores** que as implementam; a aplicação orquestra; a API traduz o protocolo HyperText
-Transfer Protocol (HTTP) para chamadas de caso de uso. Trocar memória por banco, ou um provedor de
-Large Language Model (LLM) por outro, não toca o domínio.
+O domínio define **portas** (como `EspecificacaoRepository`); a infraestrutura fornece **adaptadores**;
+a aplicação orquestra; a API traduz HyperText Transfer Protocol (HTTP) em casos de uso. Trocar memória
+por banco, ou um provedor de Large Language Model (LLM) por outro, não toca o domínio.
 
 ## 4. Passo a passo
 
-1. **Crie um pacote por contexto delimitado** em `backend/src/domain_studio/<contexto>/`, com as
-   quatro camadas (estrutura na seção 5).
+1. **Crie um pacote por contexto delimitado** em `backend/src/domain_studio/<contexto>/` (seção 5).
 2. **Escreva o domínio primeiro**, com `dataclasses` e as bases de `shared/domain.py`:
-   VO → `@dataclass(frozen=True)`; entidade → `Entity`; raiz → `AggregateRoot`; evento → `DomainEvent`.
+   objeto de valor (Value Object — VO) → `@dataclass(frozen=True)`; entidade → `Entity`; raiz → `AggregateRoot`; evento → `DomainEvent`.
 3. **Implemente as invariantes nos métodos da raiz**, lançando `DomainError`.
 4. **Declare a porta do repositório** no domínio como `typing.Protocol`.
 5. **Implemente o repositório em memória** na infraestrutura. Banco só quando o modelo estabilizar.
@@ -61,14 +58,13 @@ Large Language Model (LLM) por outro, não toca o domínio.
 [Cebola](../ddd-dicionario.md#arquitetura-cebola-onion-architecture) e
 [Clean Architecture](../ddd-dicionario.md#clean-architecture) compartilham a mesma regra de dependência.
 
-Estrutura definida no [plano de implementação](../plano-de-implementacao.md#2-estrutura-do-backend):
-
+Estrutura do [plano de implementação](../plano-de-implementacao.md#2-estrutura-do-backend):
 | Camada | Contém | Pode importar |
 |--------|--------|---------------|
 | `domain/` | Agregados, VOs, eventos, portas (Protocol), serviços de domínio | Só `shared/` e biblioteca padrão |
 | `application/` | Serviços de aplicação (casos de uso) | `domain/` |
 | `infrastructure/` | Repositórios, adaptador do LLM, publicador de eventos | `domain/` |
-| `api/` | Router FastAPI, schemas Pydantic (Data Transfer Objects — DTOs) | `application/`, `domain/` (tipos e erros) |
+| `api/` | Router FastAPI, schemas Pydantic (Data Transfer Objects — DTOs) | `application/`, `domain/` (tipos e erros); `infrastructure/` só para montar dependências |
 
 **Dataclasses no domínio, Pydantic na borda:** Pydantic valida o *formato* do que chega de fora; o
 domínio valida *regras de negócio*. Separados, os DTOs mudam (nova versão da API) sem tocar o agregado.
@@ -78,9 +74,8 @@ Nunca importa o `domain` alheio — é o que mantém o [mapa de contexto](03-con
 
 ## 6. Na prática — o DomainStudio aplicado a si mesmo
 
-Hoje o repositório tem só a fundação (marco M0): `main.py` com `/health` e `shared/domain.py`. O
-contexto Especificação é o próximo passo (M1). Os trechos abaixo são uma **proposta** de como ele
-fica; não existem ainda no repositório.
+Hoje o repositório tem só a fundação (marco M0): `main.py` com `/health` e `shared/domain.py`. Os
+trechos abaixo são uma **proposta** do contexto Especificação (marco M1); ainda não existem no repositório.
 
 **`especificacao/domain/especificacao.py`** — objeto de valor, evento e agregado:
 
@@ -100,7 +95,6 @@ class VersaoEspecificacao:
 
 @dataclass(frozen=True, kw_only=True)
 class VersaoEspecificacaoPublicada(DomainEvent):
-    especificacao_id: str
     projeto_id: str
     numero: int
 
@@ -116,10 +110,7 @@ class Especificacao(AggregateRoot):
         # invariante: numeração sequencial
         versao = VersaoEspecificacao(len(self.versoes) + 1, texto, datetime.now(UTC))
         self.versoes.append(versao)  # versões anteriores nunca são alteradas
-        evento = VersaoEspecificacaoPublicada(
-            especificacao_id=self.id, projeto_id=self.projeto_id, numero=versao.numero
-        )
-        self.record(evento)
+        self.record(VersaoEspecificacaoPublicada(projeto_id=self.projeto_id, numero=versao.numero))
         return versao
 ```
 
@@ -187,11 +178,8 @@ from domain_studio.especificacao.application.publicar_versao import PublicarVers
 from domain_studio.especificacao.infrastructure import em_memoria
 from domain_studio.shared.domain import DomainError
 
-_repositorio = em_memoria.EspecificacaoRepositoryEmMemoria()
-
-
-def publicar_versao_uc() -> PublicarVersao:
-    return PublicarVersao(_repositorio, publicar=lambda eventos: None)  # publicador real no M1
+# montagem das dependências; o publicador real de eventos chega no M1
+_caso_de_uso = PublicarVersao(em_memoria.EspecificacaoRepositoryEmMemoria(), lambda _: None)
 
 
 class PublicarVersaoIn(BaseModel):
@@ -211,7 +199,7 @@ router = APIRouter(prefix="/projetos", tags=["especificacao"])
 def publicar_versao(
     projeto_id: str,
     dados: PublicarVersaoIn,
-    caso_de_uso: Annotated[PublicarVersao, Depends(publicar_versao_uc)],
+    caso_de_uso: Annotated[PublicarVersao, Depends(lambda: _caso_de_uso)],
 ) -> VersaoOut:
     try:
         versao = caso_de_uso.executar(projeto_id, dados.texto)
@@ -249,7 +237,7 @@ Perguntas de autoavaliação:
 ## 9. Para saber mais
 
 - Anterior: [Aula 05 — Blocos táticos](05-blocos-taticos.md)
-- Próxima: [Aula 07 — Artefatos para IA](07-artefatos-para-ia.md)
+- Próxima: [Aula 07 — Artefatos para Inteligência Artificial (IA)](07-artefatos-para-ia.md)
 - [Dicionário de DDD](../ddd-dicionario.md) — seção 4.
 - [Modelo do DomainStudio](../modelo-domain-studio.md) — seção 4.1; [Plano](../plano-de-implementacao.md) — seções 1, 2 e 4.
 - Alistair Cockburn, "Hexagonal Architecture" (2005), alistair.cockburn.us.

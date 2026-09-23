@@ -72,7 +72,7 @@ traduz entrada, carrega, delega, salva, publica. Teste rápido: se o método tem
 regra do negócio, ele não pertence à aplicação.
 
 **[Evento de Domínio](../ddd-dicionario.md#evento-de-domínio-domain-event).** Nome no passado,
-imutável, carrega IDs e os dados mínimos para quem reage. Registrado pela raiz; publicado após salvar.
+imutável, carrega identificadores (IDs) e os dados mínimos para quem reage. Registrado pela raiz; publicado após salvar.
 
 **[Política](../ddd-dicionario.md#política-policy).** O dicionário segue Evans: uma regra variável
 encapsulada em objeto (padrão *Strategy*, ex. `PoliticaDeDesconto`). O DomainStudio usa também o
@@ -98,7 +98,7 @@ Classificação proposta no [modelo](../modelo-domain-studio.md#4-contextos-deli
 |-------|---------------------------|
 | Entidade | `Sugestao` (interna a `Decomposicao`), `Subdominio`, `ContextoDelimitado`, `Agregado`, `ElementoTatico` |
 | Objeto de Valor | `VersaoEspecificacao`, `Nome`, `EstadoDecomposicao`, `Revisao`, `RelacaoEntreContextos`, `Violacao`, `Diagrama`, `AlvoDeGeracao`, `ArtefatoDeCodigo` |
-| Serviço de Domínio | `Decompositor` (porta para o LLM), `ValidadorDeConformidade`, `GeradorContextMap`, `GeradorC4`, `GeradorDiagramaClasses`, `GeradorDeCodigo` |
+| Serviço de Domínio | `Decompositor` (porta para o modelo de linguagem), `ValidadorDeConformidade`, `GeradorContextMap`, `GeradorC4`, `GeradorDiagramaClasses`, `GeradorDeCodigo` |
 | Evento de Domínio | `ProjetoCriado`, `VersaoEspecificacaoPublicada`, `DecomposicaoConcluida`, `SugestaoAceita`, `SugestaoRejeitada`, `ModeloAlterado` |
 | Política | "quando `SugestaoAceita` → aplicar elemento ao Modelo de Domínio" |
 | Repositório | `ProjetoRepository`, `EspecificacaoRepository` (e um por raiz nos demais contextos) |
