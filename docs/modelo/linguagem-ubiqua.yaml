@@ -1,0 +1,143 @@
+# Linguagem Ubíqua do DomainStudio — FONTE ÚNICA.
+# Humanos leem a versão gerada (linguagem-ubiqua.md); a IA e a interface de validação leem este arquivo.
+# Não edite o .md gerado: edite aqui e rode `python3 scripts/gerar_docs.py`.
+#
+# status: proposto (hipótese, ainda não validada pelo especialista) | validado | rejeitado
+# contexto: id do contexto delimitado onde o termo vale (ver modelo-domain-studio.md §4)
+# evitar: sinônimos que NÃO devem aparecer em código, docs ou conversa
+
+versao: 1
+contextos:
+  especificacao: Especificação
+  decomposicao: Decomposição
+  modelagem: Modelagem
+  visualizacao: Visualização
+  geracao-codigo: Geração de Código
+  conhecimento: Conhecimento DDD
+
+termos:
+  - id: projeto
+    termo: Projeto
+    codigo: Projeto
+    contexto: especificacao
+    tipo: agregado
+    definicao: Espaço de trabalho de um domínio de negócio. Agrupa especificação, modelo e artefatos gerados.
+    evitar: [workspace, área de trabalho]
+    status: proposto
+
+  - id: especificacao
+    termo: Especificação
+    codigo: Especificacao
+    contexto: especificacao
+    tipo: agregado
+    definicao: Texto livre que descreve o domínio do negócio. Evolui por versões imutáveis.
+    evitar: [requisitos, documento]
+    status: proposto
+
+  - id: versao-especificacao
+    termo: Versão da Especificação
+    codigo: VersaoEspecificacao
+    contexto: especificacao
+    tipo: objeto-de-valor
+    definicao: Retrato imutável do texto num momento. Toda decomposição aponta para exatamente uma versão.
+    evitar: [revisão, rascunho]
+    status: proposto
+
+  - id: decomposicao
+    termo: Decomposição
+    codigo: Decomposicao
+    contexto: decomposicao
+    tipo: agregado
+    definicao: Execução que transforma uma versão da especificação em sugestões de modelo.
+    evitar: [análise, processamento]
+    status: proposto
+
+  - id: sugestao
+    termo: Sugestão
+    codigo: Sugestao
+    contexto: decomposicao
+    tipo: entidade
+    definicao: Elemento de modelo proposto pela decomposição, aguardando revisão humana.
+    evitar: [proposta, recomendação]
+    status: proposto
+
+  - id: revisao
+    termo: Revisão
+    codigo: Revisao
+    contexto: decomposicao
+    tipo: objeto-de-valor
+    definicao: Decisão do usuário sobre uma sugestão — aceitar, editar e aceitar, ou rejeitar.
+    evitar: [aprovação]
+    status: proposto
+
+  - id: modelo-estrategico
+    termo: Modelo Estratégico
+    codigo: ModeloEstrategico
+    contexto: modelagem
+    tipo: agregado
+    definicao: Subdomínios, contextos delimitados e o mapa de contexto de um projeto.
+    evitar: [arquitetura]
+    status: proposto
+
+  - id: modelo-tatico
+    termo: Modelo Tático
+    codigo: ModeloTatico
+    contexto: modelagem
+    tipo: agregado
+    definicao: Blocos de construção (agregados, entidades, objetos de valor, serviços, eventos) de UM contexto delimitado.
+    evitar: [modelo de dados, schema]
+    status: proposto
+
+  - id: elemento-de-modelo
+    termo: Elemento de Modelo
+    codigo: ElementoDeModelo
+    contexto: modelagem
+    tipo: conceito
+    definicao: Qualquer item de um modelo — um subdomínio, um agregado, um objeto de valor.
+    evitar: [nó, item]
+    status: proposto
+
+  - id: regra-de-conformidade
+    termo: Regra de Conformidade
+    codigo: RegraDeConformidade
+    contexto: conhecimento
+    tipo: especificacao
+    definicao: Regra do DDD verificável automaticamente sobre um modelo (ex. todo agregado tem exatamente uma raiz).
+    evitar: [lint, validação]
+    status: proposto
+
+  - id: violacao
+    termo: Violação
+    codigo: Violacao
+    contexto: modelagem
+    tipo: objeto-de-valor
+    definicao: Resultado de uma regra de conformidade não atendida por um elemento de modelo.
+    evitar: [erro, warning]
+    status: proposto
+
+  - id: diagrama
+    termo: Diagrama
+    codigo: Diagrama
+    contexto: visualizacao
+    tipo: objeto-de-valor
+    definicao: Representação textual gerada a partir do modelo (Context Mapper DSL, PlantUML, C4).
+    evitar: [imagem, desenho]
+    status: proposto
+
+  - id: artefato-de-codigo
+    termo: Artefato de Código
+    codigo: ArtefatoDeCodigo
+    contexto: geracao-codigo
+    tipo: objeto-de-valor
+    definicao: Arquivo gerado a partir do modelo tático para um alvo (ex. python-fastapi).
+    evitar: [template, boilerplate]
+    status: proposto
+
+  - id: artefato-para-ia
+    termo: Artefato para IA
+    codigo: ArtefatoParaIA
+    contexto: geracao-codigo
+    tipo: objeto-de-valor
+    definicao: Arquivo gerado para ser carregado por agentes de IA (instrução por contexto, glossário, grafo, índice de decisões).
+    evitar: [prompt, memória]
+    status: proposto

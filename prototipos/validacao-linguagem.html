@@ -1,0 +1,735 @@
+<title>Validação da Linguagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+  :root {
+    --bg: #f4f5f8; --surface: #ffffff; --sunken: #eceef3; --ink: #18202b; --muted: #5a6474;
+    --line: #dce0e7; --accent: #2b55c9; --accent-soft: #e4eafb; --ok: #1f7a52; --ok-soft: #e1f2ea;
+    --warn: #9a6210; --warn-soft: #fbf0dc; --bad: #b8392f; --bad-soft: #fae5e2;
+    --serif: "Newsreader", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f141b; --surface: #161d27; --sunken: #1c2531; --ink: #e6eaf0; --muted: #9aa4b2;
+      --line: #28313d; --accent: #8aa6ff; --accent-soft: #1f2a45; --ok: #4cc38a; --ok-soft: #14301f;
+      --warn: #e0a84a; --warn-soft: #33260f; --bad: #f07a6e; --bad-soft: #3a1c19;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f141b; --surface: #161d27; --sunken: #1c2531; --ink: #e6eaf0; --muted: #9aa4b2;
+    --line: #28313d; --accent: #8aa6ff; --accent-soft: #1f2a45; --ok: #4cc38a; --ok-soft: #14301f;
+    --warn: #e0a84a; --warn-soft: #33260f; --bad: #f07a6e; --bad-soft: #3a1c19;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+  h1, h2 { font-family: var(--serif); font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: 1.9rem; line-height: 1.15; }
+  h2 { font-size: 1.3rem; }
+  .eyebrow { font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  code, .mono { font-family: var(--mono); font-size: .86em; }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  header.top { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: end; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .top p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+  .meters { display: flex; gap: 20px; flex-wrap: wrap; }
+  .meter { min-width: 150px; }
+  .meter b { font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; border-radius: 3px; background: var(--sunken); margin-top: 6px; overflow: hidden; display: flex; }
+  .bar span { display: block; height: 100%; }
+
+  nav.tabs { display: flex; gap: 4px; margin: 18px 0 20px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+  nav.tabs button { background: none; border: 0; padding: 10px 14px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; font-weight: 500; }
+  nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  nav.tabs .count { font-family: var(--mono); font-size: .78rem; color: var(--muted); margin-left: 4px; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+  @media (max-width: 880px) { .layout { grid-template-columns: 1fr; } aside.rail { order: -1; } }
+
+  .lesson { display: flex; gap: 12px; padding: 12px 14px; background: var(--accent-soft); border-radius: 8px; margin-bottom: 18px; font-size: .92rem; }
+  .lesson strong { color: var(--accent); }
+  .lesson p { margin: 0; }
+
+  /* Fluxo */
+  ol.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  ol.flow > li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; }
+  .spine { display: flex; flex-direction: column; align-items: center; }
+  .spine .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: .8rem; font-weight: 500; background: var(--surface); border: 1.5px solid var(--line); color: var(--muted); }
+  .spine .line { flex: 1; width: 1.5px; background: var(--line); min-height: 16px; }
+  li[data-status="validado"] .dot { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+  li[data-status="ajustar"] .dot { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+  li[data-status="rejeitado"] .dot { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+  .step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .step-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+  .step-head h3 { margin: 0; font-size: 1.02rem; font-weight: 600; }
+  .actor { font-size: .82rem; color: var(--muted); }
+  .step p.acao { margin: 6px 0 10px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: .78rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--sunken); color: var(--ink); text-decoration: none; }
+  button.chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.event { background: transparent; border-style: dashed; color: var(--muted); }
+  .chip.ctx { background: transparent; }
+  .chip.avoid { text-decoration: line-through; color: var(--muted); background: transparent; }
+
+  .decide { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .decide button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 5px 12px; border-radius: 6px; font-size: .86rem; }
+  .decide button:hover { border-color: var(--muted); }
+  .decide button[aria-pressed="true"][data-v="validado"] { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+  .decide button[aria-pressed="true"][data-v="ajustar"] { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+  .decide button[aria-pressed="true"][data-v="rejeitado"] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  textarea, input[type="text"], select { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; }
+  textarea { min-height: 62px; resize: vertical; margin-top: 8px; }
+  .note-label { font-size: .8rem; color: var(--muted); margin-top: 8px; display: block; }
+
+  /* Vocabulário */
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .filters button { border: 1px solid var(--line); background: var(--surface); color: var(--muted); padding: 4px 11px; border-radius: 999px; font-size: .84rem; }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .terms { display: grid; gap: 10px; }
+  .term { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; }
+  .term[data-status="validado"] { border-left-color: var(--ok); }
+  .term[data-status="ajustar"] { border-left-color: var(--warn); }
+  .term[data-status="rejeitado"] { border-left-color: var(--bad); }
+  .term.flash { box-shadow: 0 0 0 2px var(--accent); }
+  .term h3 { margin: 0; font-size: 1rem; font-weight: 600; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .term .def { margin: 4px 0 8px; grid-column: 1 / -1; }
+  .term .uses { font-size: .8rem; color: var(--muted); grid-column: 1 / -1; }
+  .term .decide { grid-column: 1 / -1; margin-top: 8px; }
+  .term .tipo { font-size: .78rem; color: var(--muted); }
+
+  /* Especificação */
+  .spec { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; font-family: var(--serif); font-size: 1.12rem; line-height: 1.65; max-width: 68ch; }
+  .spec p { margin: 0 0 1em; }
+  mark.t { background: var(--accent-soft); color: inherit; border-bottom: 1.5px solid var(--accent); padding: 0 2px; border-radius: 2px; cursor: pointer; }
+  mark.t.v { background: var(--ok-soft); border-bottom-color: var(--ok); }
+  mark.t.r { background: var(--bad-soft); border-bottom-color: var(--bad); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--muted); margin: 12px 0 0; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+
+  /* Rail */
+  aside.rail { display: grid; gap: 16px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+  @media (max-width: 880px) { aside.rail { position: static; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .panel h2 { font-size: 1.05rem; margin-bottom: 8px; }
+  .q { padding: 10px 0; border-top: 1px solid var(--line); }
+  .q:first-of-type { border-top: 0; padding-top: 2px; }
+  .q p { margin: 0; font-size: .9rem; }
+  .q .affects { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .q textarea { min-height: 48px; font-size: .88rem; }
+  .q.answered p::before { content: "✓ "; color: var(--ok); font-weight: 600; }
+
+  /* Decisões */
+  pre.yaml { background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: .82rem; line-height: 1.55; max-height: 460px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+  .primary { background: var(--accent); color: #fff; border: 0; padding: 8px 16px; border-radius: 6px; font-weight: 500; }
+  :root[data-theme="dark"] .primary { color: #0f141b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .primary { color: #0f141b; } }
+  .ghost { background: none; border: 1px solid var(--line); color: var(--muted); padding: 8px 14px; border-radius: 6px; }
+  .toast { font-size: .86rem; color: var(--ok); }
+  .loop { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 16px 0; counter-reset: s; }
+  .loop div { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: .88rem; background: var(--surface); }
+  .loop div::before { counter-increment: s; content: counter(s); font-family: var(--mono); font-size: .75rem; color: var(--accent); display: block; }
+  .muted { color: var(--muted); }
+  [role="tabpanel"] > p.intro { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+  @media (prefers-reduced-motion: no-preference) { .term.flash { transition: box-shadow .3s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">DomainStudio · Projeto <span id="proj"></span> · Especificação <span id="ver"></span></div>
+      <h1>Validação do fluxo e do vocabulário</h1>
+      <p>Antes de qualquer modelagem, o especialista de domínio confirma se o sistema entendeu <em>o que acontece</em> e <em>como as coisas se chamam</em>. Tudo abaixo ainda é hipótese.</p>
+    </div>
+    <div class="meters" aria-label="Progresso">
+      <div class="meter"><div class="eyebrow">Passos do fluxo</div><b id="m-flow"></b><div class="bar" id="b-flow"></div></div>
+      <div class="meter"><div class="eyebrow">Termos</div><b id="m-terms"></b><div class="bar" id="b-terms"></div></div>
+      <div class="meter"><div class="eyebrow">Dúvidas</div><b id="m-q"></b><div class="bar" id="b-q"></div></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-fluxo" aria-controls="p-fluxo" aria-selected="true">Fluxo <span class="count" id="c-fluxo"></span></button>
+    <button role="tab" id="t-vocab" aria-controls="p-vocab" aria-selected="false">Vocabulário <span class="count" id="c-vocab"></span></button>
+    <button role="tab" id="t-spec" aria-controls="p-spec" aria-selected="false">Especificação</button>
+    <button role="tab" id="t-dec" aria-controls="p-dec" aria-selected="false">Decisões</button>
+  </nav>
+
+  <div class="layout">
+    <main>
+      <section role="tabpanel" id="p-fluxo" aria-labelledby="t-fluxo">
+        <div class="lesson"><p><strong>Por que validar o fluxo primeiro?</strong> Um modelo só é tão bom quanto o entendimento do processo. Se um passo estiver errado aqui, todos os agregados derivados dele herdam o erro. Aula 01, §4.</p></div>
+        <ol class="flow" id="flow"></ol>
+      </section>
+
+      <section role="tabpanel" id="p-vocab" aria-labelledby="t-vocab" hidden>
+        <div class="lesson"><p><strong>Linguagem ubíqua:</strong> cada termo aprovado aqui vira nome de classe, de rota e de evento. O nome em <code>código</code> é o que a IA vai usar. Termos riscados são sinônimos a evitar.</p></div>
+        <div class="filters" id="filters"></div>
+        <div class="terms" id="terms"></div>
+      </section>
+
+      <section role="tabpanel" id="p-spec" aria-labelledby="t-spec" hidden>
+        <p class="intro">O texto original, com cada termo do vocabulário marcado. Clique num termo para ir à definição. Um termo que aparece no texto mas não está no vocabulário é sinal de lacuna.</p>
+        <div class="spec" id="spec"></div>
+        <div class="legend"><span><i style="background:var(--accent-soft);border-bottom:1.5px solid var(--accent)"></i>proposto</span><span><i style="background:var(--ok-soft)"></i>validado</span><span><i style="background:var(--bad-soft)"></i>rejeitado</span></div>
+      </section>
+
+      <section role="tabpanel" id="p-dec" aria-labelledby="t-dec" hidden>
+        <p class="intro">Suas decisões viram um arquivo versionado no repositório. É assim que a validação humana chega à IA: não pela conversa, que se perde, mas por um artefato que ela carrega.</p>
+        <div class="loop">
+          <div>Você valida aqui</div>
+          <div>Copia o YAML para <code>docs/modelo/decisoes-validacao.yaml</code></div>
+          <div><code>gerar_docs.py</code> atualiza vocabulário, fluxo e grafo</div>
+          <div>A IA carrega a linguagem validada na próxima sessão</div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="copy">Copiar YAML</button>
+          <button class="ghost" id="reset">Limpar minhas decisões</button>
+          <span class="toast" id="toast" role="status"></span>
+        </div>
+        <pre class="yaml" id="yaml"></pre>
+      </section>
+    </main>
+
+    <aside class="rail">
+      <div class="panel">
+        <h2>Dúvidas em aberto</h2>
+        <div id="questions"></div>
+      </div>
+      <div class="panel muted" style="font-size:.86rem">
+        Protótipo estático. Os dados vêm de <code>docs/modelo/fluxo.yaml</code> e <code>linguagem-ubiqua.yaml</code>; suas respostas ficam só neste navegador até você copiar o YAML.
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- DADOS:INICIO — gerado por scripts/gerar_docs.py a partir de docs/modelo/*.yaml; não edite à mão -->
+<script type="application/json" id="dados">{
+ "projeto": "DomainStudio",
+ "versao": 1,
+ "contextos": {
+  "especificacao": "Especificação",
+  "decomposicao": "Decomposição",
+  "modelagem": "Modelagem",
+  "visualizacao": "Visualização",
+  "geracao-codigo": "Geração de Código",
+  "conhecimento": "Conhecimento DDD"
+ },
+ "termos": [
+  {
+   "id": "projeto",
+   "termo": "Projeto",
+   "codigo": "Projeto",
+   "contexto": "especificacao",
+   "tipo": "agregado",
+   "definicao": "Espaço de trabalho de um domínio de negócio. Agrupa especificação, modelo e artefatos gerados.",
+   "evitar": [
+    "workspace",
+    "área de trabalho"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "especificacao",
+   "termo": "Especificação",
+   "codigo": "Especificacao",
+   "contexto": "especificacao",
+   "tipo": "agregado",
+   "definicao": "Texto livre que descreve o domínio do negócio. Evolui por versões imutáveis.",
+   "evitar": [
+    "requisitos",
+    "documento"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "versao-especificacao",
+   "termo": "Versão da Especificação",
+   "codigo": "VersaoEspecificacao",
+   "contexto": "especificacao",
+   "tipo": "objeto-de-valor",
+   "definicao": "Retrato imutável do texto num momento. Toda decomposição aponta para exatamente uma versão.",
+   "evitar": [
+    "revisão",
+    "rascunho"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "decomposicao",
+   "termo": "Decomposição",
+   "codigo": "Decomposicao",
+   "contexto": "decomposicao",
+   "tipo": "agregado",
+   "definicao": "Execução que transforma uma versão da especificação em sugestões de modelo.",
+   "evitar": [
+    "análise",
+    "processamento"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "sugestao",
+   "termo": "Sugestão",
+   "codigo": "Sugestao",
+   "contexto": "decomposicao",
+   "tipo": "entidade",
+   "definicao": "Elemento de modelo proposto pela decomposição, aguardando revisão humana.",
+   "evitar": [
+    "proposta",
+    "recomendação"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "revisao",
+   "termo": "Revisão",
+   "codigo": "Revisao",
+   "contexto": "decomposicao",
+   "tipo": "objeto-de-valor",
+   "definicao": "Decisão do usuário sobre uma sugestão — aceitar, editar e aceitar, ou rejeitar.",
+   "evitar": [
+    "aprovação"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "modelo-estrategico",
+   "termo": "Modelo Estratégico",
+   "codigo": "ModeloEstrategico",
+   "contexto": "modelagem",
+   "tipo": "agregado",
+   "definicao": "Subdomínios, contextos delimitados e o mapa de contexto de um projeto.",
+   "evitar": [
+    "arquitetura"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "modelo-tatico",
+   "termo": "Modelo Tático",
+   "codigo": "ModeloTatico",
+   "contexto": "modelagem",
+   "tipo": "agregado",
+   "definicao": "Blocos de construção (agregados, entidades, objetos de valor, serviços, eventos) de UM contexto delimitado.",
+   "evitar": [
+    "modelo de dados",
+    "schema"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "elemento-de-modelo",
+   "termo": "Elemento de Modelo",
+   "codigo": "ElementoDeModelo",
+   "contexto": "modelagem",
+   "tipo": "conceito",
+   "definicao": "Qualquer item de um modelo — um subdomínio, um agregado, um objeto de valor.",
+   "evitar": [
+    "nó",
+    "item"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "regra-de-conformidade",
+   "termo": "Regra de Conformidade",
+   "codigo": "RegraDeConformidade",
+   "contexto": "conhecimento",
+   "tipo": "especificacao",
+   "definicao": "Regra do DDD verificável automaticamente sobre um modelo (ex. todo agregado tem exatamente uma raiz).",
+   "evitar": [
+    "lint",
+    "validação"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "violacao",
+   "termo": "Violação",
+   "codigo": "Violacao",
+   "contexto": "modelagem",
+   "tipo": "objeto-de-valor",
+   "definicao": "Resultado de uma regra de conformidade não atendida por um elemento de modelo.",
+   "evitar": [
+    "erro",
+    "warning"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "diagrama",
+   "termo": "Diagrama",
+   "codigo": "Diagrama",
+   "contexto": "visualizacao",
+   "tipo": "objeto-de-valor",
+   "definicao": "Representação textual gerada a partir do modelo (Context Mapper DSL, PlantUML, C4).",
+   "evitar": [
+    "imagem",
+    "desenho"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "artefato-de-codigo",
+   "termo": "Artefato de Código",
+   "codigo": "ArtefatoDeCodigo",
+   "contexto": "geracao-codigo",
+   "tipo": "objeto-de-valor",
+   "definicao": "Arquivo gerado a partir do modelo tático para um alvo (ex. python-fastapi).",
+   "evitar": [
+    "template",
+    "boilerplate"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "artefato-para-ia",
+   "termo": "Artefato para IA",
+   "codigo": "ArtefatoParaIA",
+   "contexto": "geracao-codigo",
+   "tipo": "objeto-de-valor",
+   "definicao": "Arquivo gerado para ser carregado por agentes de IA (instrução por contexto, glossário, grafo, índice de decisões).",
+   "evitar": [
+    "prompt",
+    "memória"
+   ],
+   "status": "proposto"
+  }
+ ],
+ "passos": [
+  {
+   "id": "P1",
+   "nome": "Criar projeto",
+   "ator": "Usuário",
+   "acao": "Cria um projeto dando nome e descrição ao domínio de negócio.",
+   "evento": "ProjetoCriado",
+   "termos": [
+    "projeto"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P2",
+   "nome": "Escrever e publicar a especificação",
+   "ator": "Usuário",
+   "acao": "Escreve a especificação em texto livre e publica uma versão. Versões publicadas nunca mudam.",
+   "evento": "VersaoEspecificacaoPublicada",
+   "termos": [
+    "especificacao",
+    "versao-especificacao"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P3",
+   "nome": "Validar fluxo e vocabulário",
+   "ator": "Usuário (especialista de domínio)",
+   "acao": "Confirma, ajusta ou rejeita cada passo do fluxo e cada termo antes de qualquer modelagem.",
+   "evento": "LinguagemValidada",
+   "termos": [
+    "especificacao"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P4",
+   "nome": "Solicitar decomposição",
+   "ator": "Usuário → Sistema (LLM)",
+   "acao": "Pede a decomposição de uma versão; o sistema gera sugestões de subdomínios, contextos, agregados e demais elementos.",
+   "evento": "DecomposicaoConcluida",
+   "termos": [
+    "decomposicao",
+    "versao-especificacao",
+    "sugestao"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P5",
+   "nome": "Revisar sugestões",
+   "ator": "Usuário",
+   "acao": "Aceita, edita ou rejeita cada sugestão. Só o que é aceito entra no modelo.",
+   "evento": "SugestaoAceita",
+   "termos": [
+    "sugestao",
+    "revisao",
+    "elemento-de-modelo"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P6",
+   "nome": "Validar o modelo",
+   "ator": "Sistema",
+   "acao": "Aplica as regras de conformidade do DDD ao modelo e aponta violações.",
+   "evento": "ModeloAlterado",
+   "termos": [
+    "modelo-estrategico",
+    "modelo-tatico",
+    "regra-de-conformidade",
+    "violacao"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P7",
+   "nome": "Gerar diagramas",
+   "ator": "Sistema",
+   "acao": "Gera mapa de contexto (CML), C4 e diagramas de classe (PlantUML) a partir do modelo.",
+   "termos": [
+    "diagrama",
+    "modelo-estrategico"
+   ],
+   "status": "proposto"
+  },
+  {
+   "id": "P8",
+   "nome": "Gerar código e artefatos para IA",
+   "ator": "Sistema",
+   "acao": "Gera o esqueleto de código por contexto e os artefatos que agentes de IA carregam para trabalhar nele.",
+   "termos": [
+    "artefato-de-codigo",
+    "artefato-para-ia",
+    "modelo-tatico"
+   ],
+   "status": "proposto"
+  }
+ ],
+ "duvidas": [
+  {
+   "id": "D1",
+   "pergunta": "A revisão é sugestão por sugestão, ou o usuário recebe o modelo inteiro e edita livremente?",
+   "afeta": [
+    "P5",
+    "revisao"
+   ]
+  },
+  {
+   "id": "D2",
+   "pergunta": "\"Modelo\" aparece em dois sentidos: modelo de domínio e modelo de linguagem (LLM). Usamos sempre \"LLM\" para o segundo?",
+   "afeta": [
+    "modelo-estrategico",
+    "modelo-tatico",
+    "P4"
+   ]
+  },
+  {
+   "id": "D3",
+   "pergunta": "\"Especificação\" nomeia ao mesmo tempo um contexto e um agregado. Isso incomoda, ou o contexto deveria se chamar \"Captura\"?",
+   "afeta": [
+    "especificacao"
+   ]
+  },
+  {
+   "id": "D4",
+   "pergunta": "O passo P3 (validar fluxo e vocabulário) é obrigatório antes da decomposição, ou pode ser pulado?",
+   "afeta": [
+    "P3",
+    "P4"
+   ]
+  }
+ ],
+ "especificacao": "Um usuário cria um projeto e escreve a especificação do domínio do seu\nnegócio em texto livre. A especificação é versionada: cada alteração gera uma\nnova versão, e versões antigas não são modificadas.\n\nA partir de uma versão da especificação, o usuário solicita uma decomposição.\nA decomposição, assistida por um modelo de linguagem, produz sugestões:\nsubdomínios, contextos delimitados, relações entre contextos, agregados,\nentidades, objetos de valor, serviços e eventos. O usuário revisa cada\nsugestão (aceita, edita ou rejeita). Só sugestões aceitas entram no modelo.\n\nO modelo de domínio do projeto pode também ser editado manualmente. O sistema\nvalida o modelo contra as regras do DDD (ex.: todo agregado tem exatamente\numa raiz; referências entre agregados são por identidade; nomes são únicos\ndentro de um contexto) e aponta violações.\n\nA partir do modelo, o sistema gera diagramas (Context Map em Context Mapper\nDSL, C4 e diagramas de classe em PlantUML) e, por fim, código (esqueleto\nde aplicação por contexto delimitado)."
+}</script>
+<!-- DADOS:FIM -->
+
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById("dados").textContent || "{}");
+  const passos = D.passos || [], termos = D.termos || [], duvidas = D.duvidas || [];
+  const contextos = D.contextos || {};
+  const KEY = "domainstudio-validacao-v1";
+  let S = { passos: {}, termos: {}, duvidas: {} };
+  try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+    }
+    for (const k of kids.flat()) if (k != null) n.append(k.nodeType ? k : document.createTextNode(k));
+    return n;
+  };
+  const termById = Object.fromEntries(termos.map(t => [t.id, t]));
+  const statusOf = (kind, id, fallback) => (S[kind][id] && S[kind][id].status) || fallback || "proposto";
+
+  document.getElementById("proj").textContent = D.projeto || "DomainStudio";
+  document.getElementById("ver").textContent = "v" + (D.versao || 1);
+
+  // Tabs
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  function show(id) {
+    tabs.forEach(t => { const on = t.id === id; t.setAttribute("aria-selected", on); document.getElementById(t.getAttribute("aria-controls")).hidden = !on; });
+    if (id === "t-spec") renderSpec();
+    if (id === "t-dec") renderYaml();
+  }
+  tabs.forEach(t => t.addEventListener("click", () => show(t.id)));
+
+  function goTerm(id) {
+    show("t-vocab");
+    const n = document.getElementById("term-" + id);
+    if (n) { n.scrollIntoView({ block: "center", behavior: "smooth" }); n.classList.add("flash"); setTimeout(() => n.classList.remove("flash"), 1400); }
+  }
+
+  function decider(kind, id, fallback, labels, onChange) {
+    const cur = statusOf(kind, id, fallback);
+    const wrap = el("div", { class: "decide", role: "group", "aria-label": "Decisão" });
+    for (const [v, label] of labels) {
+      wrap.append(el("button", { type: "button", "data-v": v, "aria-pressed": String(cur === v), onclick: () => {
+        const prev = S[kind][id] || {};
+        S[kind][id] = Object.assign({}, prev, { status: prev.status === v ? "proposto" : v });
+        save(); onChange();
+      } }, label));
+    }
+    return wrap;
+  }
+
+  function noteBox(kind, id, label, placeholder) {
+    const val = (S[kind][id] && S[kind][id].nota) || "";
+    const fid = kind + "-nota-" + id;
+    const ta = el("textarea", { id: fid, placeholder });
+    ta.value = val;
+    ta.addEventListener("input", () => { S[kind][id] = Object.assign({}, S[kind][id], { nota: ta.value }); save(); meters(); });
+    return [el("label", { class: "note-label", for: fid }, label), ta];
+  }
+
+  function renderFlow() {
+    const ol = document.getElementById("flow"); ol.replaceChildren();
+    passos.forEach((p, i) => {
+      const st = statusOf("passos", p.id, p.status);
+      const card = el("div", { class: "step" },
+        el("div", { class: "step-head" }, el("h3", {}, p.nome), el("span", { class: "actor" }, p.ator)),
+        el("p", { class: "acao" }, p.acao),
+        el("div", { class: "meta" },
+          (p.termos || []).map(tid => el("button", { type: "button", class: "chip", title: (termById[tid] || {}).definicao || "", onclick: () => goTerm(tid) }, (termById[tid] || { termo: tid }).termo)),
+          p.evento ? el("span", { class: "chip event", title: "Evento de domínio" }, "⚡ " + p.evento) : null),
+        decider("passos", p.id, p.status, [["validado", "Confere"], ["ajustar", "Ajustar"], ["rejeitado", "Não é assim"]], renderAll));
+      if (st === "ajustar" || st === "rejeitado") card.append(...noteBox("passos", p.id, st === "ajustar" ? "O que muda neste passo?" : "Como é de verdade?", "Descreva com as suas palavras…"));
+      ol.append(el("li", { "data-status": st },
+        el("div", { class: "spine" }, el("span", { class: "dot" }, p.id), i < passos.length - 1 ? el("span", { class: "line" }) : null),
+        card));
+    });
+  }
+
+  let filtro = "todos";
+  function renderFilters() {
+    const f = document.getElementById("filters"); f.replaceChildren();
+    const ids = ["todos", ...new Set(termos.map(t => t.contexto))];
+    ids.forEach(c => f.append(el("button", { type: "button", "aria-pressed": String(filtro === c), onclick: () => { filtro = c; renderFilters(); renderTerms(); } }, c === "todos" ? "Todos os contextos" : (contextos[c] || c))));
+  }
+
+  function renderTerms() {
+    const box = document.getElementById("terms"); box.replaceChildren();
+    termos.filter(t => filtro === "todos" || t.contexto === filtro).forEach(t => {
+      const st = statusOf("termos", t.id, t.status);
+      const usos = passos.filter(p => (p.termos || []).includes(t.id)).map(p => p.id);
+      const n = el("article", { class: "term", id: "term-" + t.id, "data-status": st },
+        el("h3", {}, t.termo, el("code", {}, t.codigo)),
+        el("div", { class: "meta" }, el("span", { class: "chip ctx" }, contextos[t.contexto] || t.contexto), el("span", { class: "tipo" }, t.tipo)),
+        el("p", { class: "def" }, t.definicao),
+        el("div", { class: "meta", style: "grid-column:1/-1" }, (t.evitar || []).length ? el("span", { class: "tipo" }, "Evitar:") : null, (t.evitar || []).map(a => el("span", { class: "chip avoid" }, a))),
+        el("div", { class: "uses" }, usos.length ? "Usado nos passos " + usos.join(", ") : "Não aparece em nenhum passo do fluxo — é necessário?"),
+        decider("termos", t.id, t.status, [["validado", "Confirmar"], ["ajustar", "Renomear ou redefinir"], ["rejeitado", "Rejeitar"]], renderAll));
+      if (st === "ajustar") n.append(el("div", { style: "grid-column:1/-1" }, ...noteBox("termos", t.id, "Novo nome ou nova definição", "Ex.: chamar de \"Workspace\" porque…")));
+      if (st === "rejeitado") n.append(el("div", { style: "grid-column:1/-1" }, ...noteBox("termos", t.id, "Por que rejeitar?", "Ex.: não existe no negócio")));
+      box.append(n);
+    });
+  }
+
+  function renderQuestions() {
+    const box = document.getElementById("questions"); box.replaceChildren();
+    duvidas.forEach(q => {
+      const ans = (S.duvidas[q.id] && S.duvidas[q.id].resposta) || "";
+      const fid = "q-" + q.id;
+      const ta = el("textarea", { id: fid, placeholder: "Sua resposta…", "aria-label": "Resposta à dúvida " + q.id });
+      ta.value = ans;
+      const wrap = el("div", { class: "q" + (ans.trim() ? " answered" : "") },
+        el("p", {}, q.pergunta),
+        el("div", { class: "affects" }, (q.afeta || []).map(a => termById[a]
+          ? el("button", { type: "button", class: "chip", onclick: () => goTerm(a) }, termById[a].termo)
+          : el("span", { class: "chip" }, a))),
+        ta);
+      ta.addEventListener("input", () => { S.duvidas[q.id] = { resposta: ta.value }; save(); wrap.classList.toggle("answered", !!ta.value.trim()); meters(); });
+      box.append(wrap);
+    });
+  }
+
+  function renderSpec() {
+    const box = document.getElementById("spec"); box.replaceChildren();
+    const names = termos.flatMap(t => [[t.termo, t]]).sort((a, b) => b[0].length - a[0].length);
+    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const stem = s => esc(s).replace(/ção$/i, "(?:ção|ções)").replace(/ão$/i, "(?:ão|ões)");
+    const re = new RegExp("(" + names.map(([n]) => stem(n) + "s?").join("|") + ")", "gi");
+    const find = w => names.find(([n]) => new RegExp("^" + stem(n) + "s?$", "i").test(w));
+    (D.especificacao || "").split(/\n\s*\n/).forEach(par => {
+      const p = el("p");
+      let last = 0;
+      par.replace(re, (m, _g, off) => {
+        p.append(par.slice(last, off));
+        const hit = find(m);
+        const t = hit && hit[1];
+        const st = t ? statusOf("termos", t.id, t.status) : "";
+        p.append(t ? el("mark", { class: "t" + (st === "validado" ? " v" : st === "rejeitado" ? " r" : ""), title: t.definicao, tabindex: "0", onclick: () => goTerm(t.id), onkeydown: e => { if (e.key === "Enter") goTerm(t.id); } }, m) : m);
+        last = off + m.length;
+        return m;
+      });
+      p.append(par.slice(last));
+      box.append(p);
+    });
+  }
+
+  function yamlStr(s) { return JSON.stringify(s); }
+  function renderYaml() {
+    const out = ["# Decisões de validação — cole em docs/modelo/decisoes-validacao.yaml", "# gerado pela interface de validação em " + new Date().toISOString().slice(0, 10), "passos:"];
+    passos.forEach(p => { const s = S.passos[p.id]; if (s && s.status && s.status !== "proposto") { out.push("  " + p.id + ":", "    status: " + s.status); if (s.nota) out.push("    nota: " + yamlStr(s.nota)); } });
+    out.push("termos:");
+    termos.forEach(t => { const s = S.termos[t.id]; if (s && s.status && s.status !== "proposto") { out.push("  " + t.id + ":", "    status: " + s.status); if (s.nota) out.push("    nota: " + yamlStr(s.nota)); } });
+    out.push("duvidas:");
+    duvidas.forEach(q => { const s = S.duvidas[q.id]; if (s && s.resposta && s.resposta.trim()) out.push("  " + q.id + ":", "    resposta: " + yamlStr(s.resposta.trim())); });
+    document.getElementById("yaml").textContent = out.join("\n");
+  }
+
+  function bar(id, parts, total) {
+    const b = document.getElementById(id); b.replaceChildren();
+    parts.forEach(([n, color]) => { if (n) b.append(el("span", { style: "width:" + (100 * n / Math.max(total, 1)) + "%;background:" + color })); });
+  }
+  function meters() {
+    const cnt = (kind, list) => { const c = { validado: 0, ajustar: 0, rejeitado: 0 }; list.forEach(x => { const s = statusOf(kind, x.id, x.status); if (c[s] != null) c[s]++; }); return c; };
+    const f = cnt("passos", passos), t = cnt("termos", termos);
+    const qa = duvidas.filter(q => S.duvidas[q.id] && (S.duvidas[q.id].resposta || "").trim()).length;
+    document.getElementById("m-flow").textContent = (f.validado + f.ajustar + f.rejeitado) + " / " + passos.length + " decididos";
+    document.getElementById("m-terms").textContent = (t.validado + t.ajustar + t.rejeitado) + " / " + termos.length + " decididos";
+    document.getElementById("m-q").textContent = qa + " / " + duvidas.length + " respondidas";
+    document.getElementById("c-fluxo").textContent = passos.length;
+    document.getElementById("c-vocab").textContent = termos.length;
+    bar("b-flow", [[f.validado, "var(--ok)"], [f.ajustar, "var(--warn)"], [f.rejeitado, "var(--bad)"]], passos.length);
+    bar("b-terms", [[t.validado, "var(--ok)"], [t.ajustar, "var(--warn)"], [t.rejeitado, "var(--bad)"]], termos.length);
+    bar("b-q", [[qa, "var(--accent)"]], duvidas.length);
+  }
+
+  function renderAll() { renderFlow(); renderTerms(); renderQuestions(); meters(); if (!document.getElementById("p-spec").hidden) renderSpec(); if (!document.getElementById("p-dec").hidden) renderYaml(); }
+
+  document.getElementById("copy").addEventListener("click", () => {
+    const txt = document.getElementById("yaml").textContent, toast = document.getElementById("toast");
+    const done = m => { toast.textContent = m; setTimeout(() => (toast.textContent = ""), 2500); };
+    try {
+      navigator.clipboard.writeText(txt).then(() => done("Copiado."), () => { selectYaml(); done("Selecionado — use Ctrl+C."); });
+    } catch (e) { selectYaml(); done("Selecionado — use Ctrl+C."); }
+  });
+  function selectYaml() { const r = document.createRange(); r.selectNodeContents(document.getElementById("yaml")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  let armed = false;
+  document.getElementById("reset").addEventListener("click", e => {
+    if (!armed) { armed = true; e.target.textContent = "Clique de novo para confirmar"; setTimeout(() => { armed = false; e.target.textContent = "Limpar minhas decisões"; }, 3000); return; }
+    S = { passos: {}, termos: {}, duvidas: {} }; save(); armed = false; e.target.textContent = "Limpar minhas decisões"; renderAll(); renderYaml();
+  });
+
+  renderFilters(); renderAll();
+})();
+</script>

@@ -1,3 +1,10 @@
+---
+id: dicionario-ddd
+tipo: dicionario
+titulo: "Dicionário de DDD"
+resumo: "Definições de referência de Domain-Driven Design usadas em todo o projeto."
+relacionados: [aula-00-como-usar]
+---
 # Dicionário de Definições — Domain-Driven Design (DDD)
 
 > Fonte principal: Eric Evans, *Domain-Driven Design: Tackling Complexity in the Heart of Software* (2003 — "Blue Book").

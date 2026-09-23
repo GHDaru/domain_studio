@@ -1,3 +1,11 @@
+---
+id: modelo-domain-studio
+tipo: modelo
+titulo: "Modelo de Domínio do DomainStudio"
+resumo: "O DomainStudio modelado pelo próprio método: especificação, subdomínios, contextos, agregados e mapa de contexto."
+relacionados: [linguagem-ubiqua, dicionario-ddd, plano-de-implementacao, aula-01-linguagem-ubiqua-e-fluxo]
+termos: [projeto, especificacao, decomposicao, modelo-estrategico, modelo-tatico]
+---
 # Modelo de Domínio do DomainStudio (dogfooding)
 
 > O DomainStudio é modelado com o **mesmo método** que ele vai oferecer aos usuários:
@@ -34,21 +42,11 @@
 
 ## 2. Linguagem Ubíqua
 
-| Termo | Significado no DomainStudio |
-|-------|-----------------------------|
-| **Projeto** | Espaço de trabalho de um domínio de negócio. Agrupa especificação, modelo e artefatos. |
-| **Especificação** | Texto livre que descreve o domínio do negócio. Tem versões imutáveis. |
-| **Versão da Especificação** | Retrato imutável do texto num momento. Toda decomposição aponta para uma versão. |
-| **Decomposição** | Execução que transforma uma versão da especificação em sugestões de modelo. |
-| **Sugestão** | Elemento de modelo proposto pela decomposição, aguardando revisão. |
-| **Revisão** | Decisão do usuário sobre uma sugestão: aceitar, editar e aceitar, ou rejeitar. |
-| **Modelo Estratégico** | Subdomínios, contextos delimitados e o mapa de contexto de um projeto. |
-| **Modelo Tático** | Blocos de construção (agregados, entidades, VOs, serviços, eventos…) de **um** contexto delimitado. |
-| **Elemento de Modelo** | Qualquer item de um modelo (um subdomínio, um agregado, um VO…). |
-| **Regra de Conformidade** | Regra do DDD verificável automaticamente sobre o modelo. |
-| **Violação** | Resultado de uma regra de conformidade não atendida por um elemento. |
-| **Diagrama** | Representação textual gerada a partir do modelo (CML, PlantUML, C4). |
-| **Artefato de Código** | Arquivo gerado a partir do modelo tático. |
+O vocabulário tem **fonte única** em [`modelo/linguagem-ubiqua.yaml`](modelo/linguagem-ubiqua.yaml)
+(lida pela IA e pela interface de validação) e versão legível gerada em
+[`modelo/linguagem-ubiqua.md`](modelo/linguagem-ubiqua.md). O fluxo principal e as dúvidas em
+aberto estão em [`modelo/fluxo.yaml`](modelo/fluxo.yaml). Todos os termos estão com status
+**proposto** até serem validados — ver [Aula 01](guia/01-linguagem-ubiqua-e-fluxo.md).
 
 ---
 

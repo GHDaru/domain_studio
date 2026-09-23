@@ -1,3 +1,10 @@
+---
+id: plano-de-implementacao
+tipo: plano
+titulo: "Plano de Implementação"
+resumo: "Stack FastAPI, estrutura hexagonal por contexto, rascunho da API e marcos."
+relacionados: [modelo-domain-studio, aula-06-do-modelo-ao-codigo, aula-07-artefatos-para-ia]
+---
 # Plano de Implementação — DomainStudio
 
 > O código segue o modelo definido em [modelo-domain-studio.md](modelo-domain-studio.md):
@@ -80,17 +87,18 @@ vai garantir isso.
 
 ## 4. Marcos
 
-A ordem prioriza ter um **modelo editável e validado** antes do LLM: assim a
-decomposição automática tem onde "cair", e o produto já é útil sem ela.
+Ordem ditada pelo próprio método: **primeiro a linguagem validada** (etapa 1), depois o
+**núcleo** (Modelagem), e só então o que depende dele. A Especificação — subdomínio de
+suporte — entra só no mínimo necessário junto com a Modelagem.
 
 | Marco | Entrega | Critério de pronto |
 |-------|---------|--------------------|
 | **M0 — Fundação** ✅ | Estrutura do backend, Shared Kernel, `/health`, testes, ruff. | `pytest` verde; `uvicorn` sobe. |
-| **M1 — Especificação** | `Projeto` + `Especificacao` versionada, repositórios em memória, API. | Criar projeto, publicar versões, ler histórico. |
-| **M2 — Modelagem** | `ModeloEstrategico` e `ModeloTatico` com invariantes; edição manual via API; `ValidadorDeConformidade`. | Modelar o próprio DomainStudio pela API e validar sem violações. |
+| **M1 — Linguagem e fluxo validados** 🔶 | Fontes únicas (`linguagem-ubiqua.yaml`, `fluxo.yaml`) ✅, interface de validação ([protótipo](../prototipos/validacao-linguagem.html)) ✅, gerador + verificação (`scripts/gerar_docs.py`) ✅, **validação pelo especialista** ⏳. | Todo termo e passo com decisão; toda dúvida respondida; `gerar_docs.py --check` verde. |
+| **M2 — Modelagem (núcleo)** | `ModeloEstrategico` e `ModeloTatico` com invariantes; edição via API; `ValidadorDeConformidade`. Especificação mínima (`Projeto`, `Especificacao` versionada) como insumo. | Modelar o próprio DomainStudio pela API e validar sem violações. |
 | **M3 — Visualização** | Geradores CML, PlantUML de classes e C4 de contexto. | CML gerado do modelo do DomainStudio equivale a `docs/modelo/domain_studio.cml`. |
-| **M4 — Decomposição** | Agregado `Decomposicao`, porta `Decompositor`, adaptador LLM, fluxo de revisão, política que aplica sugestões aceitas. | Decompor `docs/modelo-domain-studio.md` §1 e obter sugestões próximas do modelo manual. |
-| **M5 — Geração de Código** | Alvo `python-fastapi` com templates. | Código gerado para o DomainStudio tem a estrutura da seção 2 e passa no lint. |
+| **M4 — Decomposição (núcleo)** | Agregado `Decomposicao`, porta `Decompositor`, adaptador LLM, revisão, política que aplica sugestões aceitas. | Decompor a §1 do modelo e obter sugestões próximas do modelo manual. |
+| **M5 — Código e artefatos para IA** | Alvo `python-fastapi` + artefatos para IA por contexto ([Aula 07](guia/07-artefatos-para-ia.md)). | Código gerado para o DomainStudio tem a estrutura da seção 2, passa no lint e traz `CLAUDE.md` por contexto. |
 | **M6 — Persistência e acesso** | SQLAlchemy + migrações (Alembic); autenticação. | Dados sobrevivem a restart; multiusuário. |
 
 ### Critério de dogfooding
@@ -100,7 +108,23 @@ atravessa todos os contextos.
 
 ---
 
-## 5. Próximo passo
+## 5. Backlog do roadmap (depois de M6, em ordem de valor)
 
-Começar **M1 — Especificação**: agregados `Projeto` e `Especificacao`,
-repositórios em memória, serviços de aplicação e rotas.
+1. **Rastreabilidade** — cada elemento do modelo aponta o trecho da especificação que o originou.
+2. **Detecção de ambiguidade** — mesmo termo com sentidos diferentes sugere novo contexto delimitado.
+3. **Event Storming** como etapa intermediária da decomposição (eventos, comandos, atores, políticas).
+4. **Evolução do modelo** — diff entre versões e impacto de uma mudança na especificação.
+5. **Métricas de qualidade** — tamanho de agregado, acoplamento entre contextos.
+6. **Round-trip** — importar/exportar CML; engenharia reversa de código existente.
+7. **Registro de decisões** — Architecture Decision Records (ADRs) + índice JSONL, só por acréscimo.
+8. **Mais alvos de geração** — Java/Spring, TypeScript/NestJS; testes gerados das invariantes.
+9. **Colaboração e interface** — editor visual do mapa de contexto, papéis, comentários.
+10. **Acesso por agentes** — servidor Model Context Protocol (MCP) / CLI.
+
+---
+
+## 6. Próximo passo
+
+**Você valida a linguagem e o fluxo** no protótipo, cola o YAML de decisões em
+`docs/modelo/decisoes-validacao.yaml` e roda `python3 scripts/gerar_docs.py`. Com a
+linguagem validada, começa o M2.

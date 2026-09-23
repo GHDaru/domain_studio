@@ -1,0 +1,81 @@
+# Fluxo principal do DomainStudio — FONTE ÚNICA (humanos, IA e interface de validação).
+# Cada passo cita os termos da linguagem ubíqua que usa (ids de linguagem-ubiqua.yaml).
+# status: proposto | validado | ajustar | rejeitado
+
+versao: 1
+passos:
+  - id: P1
+    nome: Criar projeto
+    ator: Usuário
+    acao: Cria um projeto dando nome e descrição ao domínio de negócio.
+    evento: ProjetoCriado
+    termos: [projeto]
+    status: proposto
+
+  - id: P2
+    nome: Escrever e publicar a especificação
+    ator: Usuário
+    acao: Escreve a especificação em texto livre e publica uma versão. Versões publicadas nunca mudam.
+    evento: VersaoEspecificacaoPublicada
+    termos: [especificacao, versao-especificacao]
+    status: proposto
+
+  - id: P3
+    nome: Validar fluxo e vocabulário
+    ator: Usuário (especialista de domínio)
+    acao: Confirma, ajusta ou rejeita cada passo do fluxo e cada termo antes de qualquer modelagem.
+    evento: LinguagemValidada
+    termos: [especificacao]
+    status: proposto
+
+  - id: P4
+    nome: Solicitar decomposição
+    ator: Usuário → Sistema (LLM)
+    acao: Pede a decomposição de uma versão; o sistema gera sugestões de subdomínios, contextos, agregados e demais elementos.
+    evento: DecomposicaoConcluida
+    termos: [decomposicao, versao-especificacao, sugestao]
+    status: proposto
+
+  - id: P5
+    nome: Revisar sugestões
+    ator: Usuário
+    acao: Aceita, edita ou rejeita cada sugestão. Só o que é aceito entra no modelo.
+    evento: SugestaoAceita
+    termos: [sugestao, revisao, elemento-de-modelo]
+    status: proposto
+
+  - id: P6
+    nome: Validar o modelo
+    ator: Sistema
+    acao: Aplica as regras de conformidade do DDD ao modelo e aponta violações.
+    evento: ModeloAlterado
+    termos: [modelo-estrategico, modelo-tatico, regra-de-conformidade, violacao]
+    status: proposto
+
+  - id: P7
+    nome: Gerar diagramas
+    ator: Sistema
+    acao: Gera mapa de contexto (CML), C4 e diagramas de classe (PlantUML) a partir do modelo.
+    termos: [diagrama, modelo-estrategico]
+    status: proposto
+
+  - id: P8
+    nome: Gerar código e artefatos para IA
+    ator: Sistema
+    acao: Gera o esqueleto de código por contexto e os artefatos que agentes de IA carregam para trabalhar nele.
+    termos: [artefato-de-codigo, artefato-para-ia, modelo-tatico]
+    status: proposto
+
+duvidas:
+  - id: D1
+    pergunta: A revisão é sugestão por sugestão, ou o usuário recebe o modelo inteiro e edita livremente?
+    afeta: [P5, revisao]
+  - id: D2
+    pergunta: "\"Modelo\" aparece em dois sentidos: modelo de domínio e modelo de linguagem (LLM). Usamos sempre \"LLM\" para o segundo?"
+    afeta: [modelo-estrategico, modelo-tatico, P4]
+  - id: D3
+    pergunta: "\"Especificação\" nomeia ao mesmo tempo um contexto e um agregado. Isso incomoda, ou o contexto deveria se chamar \"Captura\"?"
+    afeta: [especificacao]
+  - id: D4
+    pergunta: O passo P3 (validar fluxo e vocabulário) é obrigatório antes da decomposição, ou pode ser pulado?
+    afeta: [P3, P4]
