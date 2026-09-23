@@ -1,0 +1,79 @@
+/* DomainStudio modelado com o próprio método (Context Mapper DSL).
+ * Ver docs/modelo-domain-studio.md para a explicação completa. */
+
+ContextMap DomainStudioMap {
+	type = SYSTEM_LANDSCAPE
+	state = TO_BE
+
+	contains Especificacao, Decomposicao, Modelagem, Visualizacao, GeracaoDeCodigo, ConhecimentoDDD, ProvedorLLM
+
+	Especificacao [S]->[C] Decomposicao
+
+	Modelagem [U,OHS]->[D] Decomposicao
+
+	Modelagem [U,OHS,PL]->[D,CF] Visualizacao
+
+	Modelagem [U,OHS,PL]->[D,CF] GeracaoDeCodigo
+
+	ConhecimentoDDD [SK]<->[SK] Modelagem
+
+	ConhecimentoDDD [U]->[D] Decomposicao
+
+	ProvedorLLM [U]->[D,ACL] Decomposicao
+}
+
+BoundedContext Especificacao implements EspecificacaoSD {
+	type = FEATURE
+	domainVisionStatement = "Captura e versiona a especificação textual do domínio do usuário."
+}
+
+BoundedContext Decomposicao implements DecomposicaoSD {
+	type = FEATURE
+	domainVisionStatement = "Transforma uma versão da especificação em sugestões de modelo DDD revisáveis."
+}
+
+BoundedContext Modelagem implements ModelagemSD {
+	type = FEATURE
+	domainVisionStatement = "Mantém o modelo estratégico e tático do projeto e o valida contra as regras do DDD."
+}
+
+BoundedContext Visualizacao implements VisualizacaoSD {
+	type = FEATURE
+	domainVisionStatement = "Gera diagramas CML, C4 e PlantUML a partir do modelo."
+}
+
+BoundedContext GeracaoDeCodigo implements GeracaoDeCodigoSD {
+	type = FEATURE
+	domainVisionStatement = "Gera esqueleto de código por contexto delimitado a partir do modelo tático."
+}
+
+BoundedContext ConhecimentoDDD implements ConhecimentoDDDSD {
+	type = FEATURE
+	domainVisionStatement = "Catálogo de conceitos e regras de conformidade do DDD."
+}
+
+BoundedContext ProvedorLLM {
+	type = SYSTEM
+	domainVisionStatement = "Serviço externo de modelo de linguagem."
+}
+
+Domain DomainStudio {
+	Subdomain DecomposicaoSD {
+		type = CORE_DOMAIN
+	}
+	Subdomain ModelagemSD {
+		type = CORE_DOMAIN
+	}
+	Subdomain EspecificacaoSD {
+		type = SUPPORTING_DOMAIN
+	}
+	Subdomain VisualizacaoSD {
+		type = SUPPORTING_DOMAIN
+	}
+	Subdomain GeracaoDeCodigoSD {
+		type = SUPPORTING_DOMAIN
+	}
+	Subdomain ConhecimentoDDDSD {
+		type = SUPPORTING_DOMAIN
+	}
+}

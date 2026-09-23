@@ -126,7 +126,7 @@ Generalização das anteriores: a regra de dependência é que dependências apo
 ### Refatoração de Modelo (Model Refactoring)
 Processo contínuo de aprofundar e corrigir o modelo à medida que a compreensão do domínio evolui. O modelo nunca está "pronto" — é uma destilação viva.
 
-### Suposto (Supple Design)
+### Design Maleável (Supple Design)
 Design que permite expressar o modelo de forma fluida e declarativa no código, com combinações poderosas de pequenos conceitos. Objetos de valor, especificações e políticas são ferramentas para alcançá-lo. O objetivo é que o código "leia" como a linguagem ubíqua.
 
 ### Destilação (Distillation)

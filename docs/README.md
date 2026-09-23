@@ -8,13 +8,18 @@ Mapper) e, por fim, código.
 
 ```
 docs/
- ├── README.md            ← este índice
- └── ddd-dicionario.md    ← dicionário de definições (base de conhecimento)
+ ├── README.md                   ← este índice
+ ├── ddd-dicionario.md           ← dicionário de definições (base de conhecimento)
+ ├── modelo-domain-studio.md     ← o DomainStudio modelado pelo próprio método (dogfooding)
+ ├── modelo/domain_studio.cml    ← mapa de contexto em Context Mapper DSL
+ └── plano-de-implementacao.md   ← stack (FastAPI), estrutura do backend, API e marcos
+backend/                         ← API FastAPI (ver backend/README.md)
 ```
 
 ## Roadmap conceitual
 
 1. **Dicionário de DDD** ✅ — termos e padrões de referência.
+   - **Modelo do próprio DomainStudio** ✅ e **plano de implementação** ✅ (marco M0 do backend concluído).
 2. **Especificação de entrada** — formato/DSL para o usuário descrever o domínio.
 3. **Decomposição** — do texto → Subdomínios → Contextos Delimitados → Agregados → Entidades/VOs.
 4. **Visualização** — geração de diagramas C4, PlantUML e Context Map.
